@@ -1,0 +1,62 @@
+{
+  "entities": {
+    "Product": {
+      "title": "Product",
+      "description": "Electronic or robotics product available in the store",
+      "type": "object",
+      "properties": {
+        "name_uz": { "type": "string", "description": "Name in Uzbek" },
+        "name_en": { "type": "string", "description": "Name in English" },
+        "name_ru": { "type": "string", "description": "Name in Russian" },
+        "description_uz": { "type": "string", "description": "Description in Uzbek" },
+        "description_en": { "type": "string", "description": "Description in English" },
+        "description_ru": { "type": "string", "description": "Description in Russian" },
+        "price": { "type": "number", "description": "Product price" },
+        "image": { "type": "string", "description": "URL to product image" },
+        "category": { "type": "string", "description": "Product category" },
+        "stock": { "type": "number", "description": "Available stock quantity" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp of last update" }
+      },
+      "required": ["name_uz", "name_en", "name_ru", "price", "image", "category", "stock"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Customer purchase order",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "ID of the user who placed the order" },
+        "items": { "type": "array", "description": "List of ordered items" },
+        "total": { "type": "number", "description": "Total order amount" },
+        "customerInfo": { "type": "object", "description": "Shipping and contact information" },
+        "status": { "type": "string", "description": "Order status (e.g., pending, paid, shipped)" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp of order creation" }
+      },
+      "required": ["userId", "items", "total", "customerInfo", "status", "createdAt"]
+    },
+    "User": {
+      "title": "User",
+      "description": "User profile and role information",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "description": "User email address" },
+        "role": { "type": "string", "enum": ["admin", "user"], "description": "Access level" },
+        "name": { "type": "string", "description": "User display name" }
+      },
+      "required": ["email", "role", "name"]
+    }
+  },
+  "firestore": {
+    "products": {
+      "schema": "Product",
+      "description": "Public catalog of robotics and electronics parts"
+    },
+    "orders": {
+      "schema": "Order",
+      "description": "Customer orders, restricted to admins and the owner"
+    },
+    "users": {
+      "schema": "User",
+      "description": "User profiles, restricted to the user themselves and admins"
+    }
+  }
+}
