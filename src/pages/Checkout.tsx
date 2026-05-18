@@ -57,7 +57,7 @@ export default function Checkout() {
 
     setIsSubmitting(true);
     try {
-      await addDoc(collection(db, 'orders'), {
+      const orderRef = await addDoc(collection(db, 'orders'), {
         userId: user.uid,
         items,
         total,
@@ -70,6 +70,27 @@ export default function Checkout() {
         status: 'pending',
         createdAt: serverTimestamp()
       });
+
+      // Send Telegram Notification
+      try {
+        await fetch('/api/notify-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            orderId: orderRef.id,
+            customerInfo: {
+              phone: `${formData.dialCode}${formData.phone}`,
+              country: selectedCountryObj?.name || formData.country,
+              city: formData.city,
+              address: formData.address
+            },
+            items: items.map(i => ({ name: i.name, quantity: i.quantity, price: i.price })),
+            total
+          })
+        });
+      } catch (err) {
+        console.error('Failed to notify telegram:', err);
+      }
       
       setOrderSuccess(true);
       clearCart();
