@@ -57,16 +57,27 @@ export default function Checkout() {
 
     setIsSubmitting(true);
     try {
+      // Sanitize items to ensure no undefined values
+      const sanitizedItems = items.map(item => ({
+        id: String(item.id || ''),
+        name: String(item.name || 'Unknown Item'),
+        price: Number(item.price) || 0,
+        image: String(item.image || ''),
+        quantity: Number(item.quantity) || 1
+      }));
+
+      const customerInfo = {
+        phone: `${formData.dialCode}${formData.phone}`.trim(),
+        country: String(selectedCountryObj?.name || formData.country || ''),
+        city: String(formData.city || ''),
+        address: String(formData.address || '')
+      };
+
       const orderRef = await addDoc(collection(db, 'orders'), {
         userId: user.uid,
-        items,
-        total,
-        customerInfo: {
-          phone: `${formData.dialCode}${formData.phone}`,
-          country: selectedCountryObj?.name || formData.country,
-          city: formData.city,
-          address: formData.address
-        },
+        items: sanitizedItems,
+        total: Number(total) || 0,
+        customerInfo,
         status: 'pending',
         createdAt: serverTimestamp()
       });
@@ -78,14 +89,9 @@ export default function Checkout() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             orderId: orderRef.id,
-            customerInfo: {
-              phone: `${formData.dialCode}${formData.phone}`,
-              country: selectedCountryObj?.name || formData.country,
-              city: formData.city,
-              address: formData.address
-            },
-            items: items.map(i => ({ name: i.name, quantity: i.quantity, price: i.price })),
-            total
+            customerInfo,
+            items: sanitizedItems.map(i => ({ name: i.name, quantity: i.quantity, price: i.price })),
+            total: Number(total) || 0
           })
         });
       } catch (err) {
