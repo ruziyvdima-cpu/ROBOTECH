@@ -21,7 +21,8 @@ export default function Checkout() {
     city: '',
     address: '',
     phone: '',
-    dialCode: '+998' // Default for UZ
+    dialCode: '+998', // Default for UZ
+    telegram: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
@@ -66,8 +67,15 @@ export default function Checkout() {
         quantity: Number(item.quantity) || 1
       }));
 
+      if (!formData.telegram.trim()) {
+        alert("Iltimos, Telegram raqamingizni yoki username-ingizni kiriting! (Bu maydon majburiy / Mandatory field)");
+        setIsSubmitting(false);
+        return;
+      }
+
       const customerInfo = {
         phone: `${formData.dialCode}${formData.phone}`.trim(),
+        telegram: String(formData.telegram || '').trim(),
         country: String(selectedCountryObj?.name || formData.country || ''),
         city: String(formData.city || ''),
         address: String(formData.address || '')
@@ -118,8 +126,10 @@ export default function Checkout() {
         >
           <CheckCircle2 className="h-20 w-20 text-red-600" />
         </motion.div>
-        <div className="space-y-4">
-          <h2 className="text-4xl font-black text-zinc-900 dark:text-white uppercase italic tracking-tighter">{t('checkout.success')}</h2>
+        <div className="space-y-4 px-6 md:px-12">
+          <h2 className="text-2xl md:text-3xl font-black text-zinc-900 dark:text-white uppercase italic tracking-tighter leading-tight">
+            Buyurtmangiz qabul qilindi, o'zimiz aloqaga chiqamiz
+          </h2>
           <p className="text-zinc-500 dark:text-zinc-400 font-bold uppercase text-[10px] tracking-[0.3em] animate-pulse">Redirecting to System Root...</p>
         </div>
       </div>
@@ -174,6 +184,27 @@ export default function Checkout() {
                   onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
                 />
               </div>
+            </div>
+
+            {/* Telegram Section */}
+            <div className="space-y-3">
+              <label className="flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400 dark:text-zinc-650">
+                <span className="text-md leading-none">✈️</span>
+                Telegram Raqam yoki Username
+              </label>
+              <div className="flex bg-zinc-50 dark:bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-100 dark:border-zinc-800 focus-within:border-red-600 transition-all">
+                <input
+                  type="text"
+                  required
+                  placeholder="+998901234567 yoki @username"
+                  className="flex-1 bg-transparent px-6 py-4 text-sm text-zinc-900 dark:text-white outline-none font-black tracking-widest placeholder:opacity-30"
+                  value={formData.telegram}
+                  onChange={(e) => setFormData(prev => ({ ...prev, telegram: e.target.value }))}
+                />
+              </div>
+              <p className="text-[10px] font-black text-red-600 tracking-wider pl-1 uppercase">
+                * Majburiy maydon, kiritilmasa buyurtma olinmaydi!
+              </p>
             </div>
 
             {/* Location Section */}

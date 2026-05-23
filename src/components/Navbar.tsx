@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ShoppingCart, Moon, Sun, Search, User, LogOut, Menu, X, Globe, MapPin, ArrowLeft } from 'lucide-react';
+import { ShoppingCart, Moon, Sun, Search, User, LogOut, Menu, X, Globe, MapPin, ArrowLeft, ClipboardList } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { cn } from '../lib/utils';
 import { Country, City } from 'country-state-city';
+import AuthModal from './AuthModal';
+import OrdersModal from './OrdersModal';
 
 export default function Navbar() {
   const { t, i18n } = useTranslation();
@@ -14,6 +16,8 @@ export default function Navbar() {
   const { items } = useCart();
   const { user, userData, isAdmin, signIn, logout } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [isOrdersOpen, setIsOrdersOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -105,6 +109,17 @@ export default function Navbar() {
               {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </button>
 
+            {/* Orders Tray */}
+            {user && (
+              <button
+                onClick={() => setIsOrdersOpen(true)}
+                className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-white dark:bg-zinc-900 text-black dark:text-zinc-505 hover:bg-zinc-50 dark:hover:text-red-500 border border-black dark:border-zinc-850 transition-all hover:scale-105"
+                title="Sening Buyurtmalaring"
+              >
+                <ClipboardList className="h-5 w-5" />
+              </button>
+            )}
+
             {/* Cart */}
             <Link
               to="/cart"
@@ -135,7 +150,7 @@ export default function Navbar() {
               </div>
             ) : (
               <button
-                onClick={signIn}
+                onClick={() => setIsAuthOpen(true)}
                 className="flex items-center gap-2 rounded-xl bg-black dark:bg-zinc-100 px-5 py-2.5 text-[10px] font-black text-white dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-white transition-all uppercase tracking-widest sm:flex"
               >
                 Launch Protocol
@@ -144,6 +159,8 @@ export default function Navbar() {
           </div>
         </div>
       </div>
+      <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
+      <OrdersModal isOpen={isOrdersOpen} onClose={() => setIsOrdersOpen(false)} />
     </nav>
   );
 }

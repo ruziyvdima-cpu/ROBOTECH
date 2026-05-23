@@ -59,6 +59,7 @@ async function startServer() {
 📦 <b>Yangi Buyurtma!</b>
 🆔 ID: <code>${orderId}</code>
 👤 Mijoz: ${escapeHtml(safeCustomerInfo.phone)}
+✈️ Telegram: ${escapeHtml(safeCustomerInfo.telegram || "Noma'lum")}
 📍 Manzil: ${escapeHtml(safeCustomerInfo.country)}, ${escapeHtml(safeCustomerInfo.city)}, ${escapeHtml(safeCustomerInfo.address)}
 
 🛒 <b>Mahsulotlar:</b>
