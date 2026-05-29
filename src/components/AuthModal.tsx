@@ -9,7 +9,7 @@ interface AuthModalProps {
 }
 
 export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
-  const { signIn, signInWithEmail, signUpWithEmail } = useAuth();
+  const { signIn, signInWithEmail, signUpWithEmail, signInGuest } = useAuth();
   const [isLoginTab, setIsLoginTab] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -59,7 +59,20 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
       await signIn();
       onClose();
     } catch (err: any) {
-      setError("Google sign-in blocked by sandbox or browser. Write email & password instead! / Google login blocklandi. Email va Parol orqali kiring.");
+      setError("Google sign-in blocked by sandbox or browser. Try Guest Login or Email instead! / Google login blocklandi. Mehmon bo'lib kiring yoki Email orqali kiring.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGuestSignIn = async () => {
+    setError('');
+    setLoading(true);
+    try {
+      await signInGuest();
+      onClose();
+    } catch (err: any) {
+      setError("Mehmon bo'lib kirishda xatolik yuz berdi! / Guest sign-in failed.");
     } finally {
       setLoading(false);
     }
@@ -226,6 +239,17 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
             />
           </svg>
           Google Orqali Kirish
+        </button>
+
+        {/* Guest Session Button */}
+        <button
+          type="button"
+          onClick={handleGuestSignIn}
+          disabled={loading}
+          className="w-full mt-3 flex items-center justify-center gap-3 bg-red-650 hover:bg-red-600 dark:bg-zinc-900 dark:hover:bg-zinc-800 border-2 border-red-600 dark:border-zinc-800 text-white font-black py-4 rounded-2xl text-[10px] uppercase tracking-[0.2em] transition-all cursor-pointer active:scale-[0.98]"
+        >
+          <span className="text-sm">⚡</span>
+          Mehmon Bo'lib Kirish (Tezkor)
         </button>
 
         <div className="mt-8 flex items-center justify-center gap-2 text-[9px] text-zinc-500 font-bold uppercase tracking-wider">

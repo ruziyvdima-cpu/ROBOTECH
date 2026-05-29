@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import { db, handleFirestoreError, OperationType } from '../lib/firebase';
+import { auth, db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { formatPrice } from '../lib/utils';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { Country, City } from 'country-state-city';
@@ -13,8 +13,14 @@ import { motion } from 'motion/react';
 export default function Checkout() {
   const { t } = useTranslation();
   const { items, total, clearCart } = useCart();
-  const { user } = useAuth();
+  const { user, signInGuest } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!user) {
+      signInGuest().catch(err => console.error("Auto guest sign-in on checkout failed:", err));
+    }
+  }, [user, signInGuest]);
 
   const [formData, setFormData] = useState({
     country: '',
@@ -51,12 +57,19 @@ export default function Checkout() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!user) {
-      alert('Please sign in to place an order.');
-      return;
+    setIsSubmitting(true);
+    let activeUser = user || auth.currentUser;
+    if (!activeUser) {
+      try {
+        await signInGuest();
+        activeUser = auth.currentUser;
+      } catch (err) {
+        alert("Buyurtma berish uchun tizimga ulanishda xatolik yuz berdi. Iltimos, qaytadan urining.");
+        setIsSubmitting(false);
+        return;
+      }
     }
 
-    setIsSubmitting(true);
     try {
       // Sanitize items to ensure no undefined values
       const sanitizedItems = items.map(item => ({
@@ -82,7 +95,7 @@ export default function Checkout() {
       };
 
       const orderRef = await addDoc(collection(db, 'orders'), {
-        userId: user.uid,
+        userId: activeUser?.uid || 'guest_user',
         items: sanitizedItems,
         total: Number(total) || 0,
         customerInfo,

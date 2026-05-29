@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { onAuthStateChanged, User, signInWithPopup, GoogleAuthProvider, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { onAuthStateChanged, User, signInWithPopup, GoogleAuthProvider, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, signInAnonymously } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db, handleFirestoreError, OperationType } from '../lib/firebase';
 
@@ -11,6 +11,7 @@ interface AuthContextType {
   signIn: () => Promise<void>;
   signInWithEmail: (email: string, pass: string) => Promise<void>;
   signUpWithEmail: (email: string, pass: string, name: string) => Promise<void>;
+  signInGuest: () => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -58,6 +59,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const signInGuest = async () => {
+    try {
+      await signInAnonymously(auth);
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  };
+
   const logout = async () => {
     try {
       await signOut(auth);
@@ -75,17 +85,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (userDoc.exists()) {
             setUserData(userDoc.data());
           } else {
-            // New user (e.g., first social login sign-in)
+            const isGuest = !user.email;
             const newData = {
-              email: user.email,
+              email: user.email || `guest_${user.uid.substring(0, 6)}@robotech.uz`,
               role: user.email === 'ruziyvdima@gmail.com' ? 'admin' : 'user',
-              name: user.displayName || user.email?.split('@')[0]
+              name: user.displayName || (isGuest ? `Mehmon ${user.uid.substring(0, 4)}` : (user.email?.split('@')[0] || 'Foydalanuvchi'))
             };
             await setDoc(doc(db, 'users', user.uid), newData);
             setUserData(newData);
           }
         } catch (error) {
-          handleFirestoreError(error, OperationType.GET, `users/${user.uid}`);
+          console.error("Firestore getDoc/setDoc user record error:", error);
+          setUserData({
+            email: user.email || `guest_${user.uid.substring(0, 6)}@robotech.uz`,
+            role: user.email === 'ruziyvdima@gmail.com' ? 'admin' : 'user',
+            name: user.displayName || (!user.email ? `Mehmon ${user.uid.substring(0, 4)}` : (user.email?.split('@')[0] || 'Foydalanuvchi'))
+          });
         }
       } else {
         setUserData(null);
@@ -99,7 +114,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const isAdmin = userData?.role === 'admin';
 
   return (
-    <AuthContext.Provider value={{ user, userData, loading, isAdmin, signIn, signInWithEmail, signUpWithEmail, logout }}>
+    <AuthContext.Provider value={{ user, userData, loading, isAdmin, signIn, signInWithEmail, signUpWithEmail, signInGuest, logout }}>
       {children}
     </AuthContext.Provider>
   );
